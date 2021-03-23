@@ -1,33 +1,34 @@
 from django.shortcuts import get_object_or_404
-from ninja import NinjaAPI
+from ninja import Router
 from ninja.security import HttpBearer
 from .schemas import PostIn, PostOut
 from .models import Post
 from typing import List
+from auth.jwt import AuthBearer
 
 
-api = NinjaAPI()
+router_blog = Router()
 
 
-@api.post('/post')
+@router_blog.post('/post')
 def create_post(request, payload: PostIn):
     post = Post.objects.create(**payload.dict())
     return {'id': post.id}
 
 
-@api.get('/post/{post_id}', response=PostOut)
+@router_blog.get('/post/{post_id}', response=PostOut)
 def get_post(request, post_id: int):
     post = get_object_or_404(Post, id=post_id)
     return post
 
 
-@api.get('/posts', response=List[PostOut])
+@router_blog.get('/posts', response=List[PostOut], auth=AuthBearer())
 def list_posts(request):
     qs = Post.objects.all()
     return qs
 
 
-@api.put('/post/{post_id}')
+@router_blog.put('/post/{post_id}')
 def update_post(request, post_id: int, payload: PostIn):
     post = get_object_or_404(Post, id=post_id)
     for attr, value in payload.dict().items():
@@ -36,7 +37,7 @@ def update_post(request, post_id: int, payload: PostIn):
     return {'success': True}
 
 
-@api.delete('/post/{post_id}')
+@router_blog.delete('/post/{post_id}')
 def delete_post(request, post_id: int):
     post = get_object_or_404(Post, id=post_id)
     post.delete()
