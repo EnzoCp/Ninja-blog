@@ -52,3 +52,10 @@ class AuthBearer(HttpBearer):
         user = get_current_user(token)
         if user:
             return user
+
+
+class AuthBearerAdmin(HttpBearer):
+    def authenticate(self, request, token: str) -> User:
+        user = get_current_user(token)
+        if user and user.is_superuser:
+            return user
